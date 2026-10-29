@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE = "http://192.168.0.101:5000";
+const API_BASE = "http://127.0.0.1:5000";
 
 const FOOD_OPTIONS = [
   "Oats",
