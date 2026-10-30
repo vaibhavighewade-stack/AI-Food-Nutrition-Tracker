@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://prescribe-pebble-immersion.ngrok-free.dev";
 
 const FOOD_OPTIONS = [
   "Oats",
