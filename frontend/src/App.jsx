@@ -101,6 +101,20 @@ function App() {
       console.error("Unable to load profile:", error);
     }
   }, []);
+  
+useEffect(() => {
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/history`);
+      setHistory(response.data);
+    } catch (error) {
+      console.error("Unable to load food history:", error);
+    }
+  };
+
+  fetchHistory();
+}, []);
+
 
   useEffect(() => {
     localStorage.setItem("foodTrackerHistory", JSON.stringify(history));

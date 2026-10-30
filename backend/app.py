@@ -2,9 +2,31 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import pipeline
 from PIL import Image
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
+# SQLite Database Setup
+def init_db():
+    conn = sqlite3.connect("food_history.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS food_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            food_name TEXT NOT NULL,
+            calories REAL,
+            protein REAL,
+            carbs REAL,
+            fat REAL,
+            scan_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
 
 print("Loading AI Food Model...")
 
@@ -476,6 +498,7 @@ food_mapping = {
 # NUTRITION ROUTE
 # =========================================================
 
+
 @app.route("/nutrition", methods=["POST"])
 def get_nutrition():
     data = request.get_json(silent=True) or {}
@@ -488,6 +511,24 @@ def get_nutrition():
             "error": f"Nutrition data not found for {food_name}"
         }), 404
 
+    conn = sqlite3.connect("food_history.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO food_history
+        (food_name, calories, protein, carbs, fat)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        food_name,
+        nutrition["calories"],
+        nutrition["protein"],
+        nutrition["carbs"],
+        nutrition["fat"]
+    ))
+
+    conn.commit()
+    conn.close()
+
     return jsonify({
         "food": food_name,
         "calories": nutrition["calories"],
@@ -495,6 +536,28 @@ def get_nutrition():
         "carbs": nutrition["carbs"],
         "fat": nutrition["fat"]
     })
+
+# =========================================================
+# FOOD HISTORY ROUTE
+# =========================================================
+
+@app.route("/history", methods=["GET"])
+def get_history():
+    conn = sqlite3.connect("food_history.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT * FROM food_history
+        ORDER BY id DESC
+    """)
+
+    rows = cursor.fetchall()
+    history = [dict(row) for row in rows]
+
+    conn.close()
+
+    return jsonify(history)
 
 
 # =========================================================
